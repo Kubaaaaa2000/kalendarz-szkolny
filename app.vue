@@ -3,7 +3,7 @@ const colorMode = useColorMode()
 
 const isDark = computed({
   get() {
-    return colorMode.value === 'dark'
+    return colorMode?.value === 'dark'
   },
   set(_isDark) {
     colorMode.preference = _isDark ? 'dark' : 'light'
@@ -46,8 +46,9 @@ const isLoggedIn = true;
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-            <ClientOnly v-if="!colorMode?.forced">
+            <ClientOnly >
                 <UButton
+                v-if="!colorMode?.forced"
                 :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
                 color="neutral"
                 variant="ghost"
