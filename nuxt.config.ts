@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  
+  ssr: false,
   app: {
     baseURL: '/kalendarz-szkolny/',
     head: {
@@ -22,7 +22,6 @@ export default defineNuxtConfig({
     timeline: { enabled: true }
   },
   modules: ['@nuxt/ui'], 
-  ssr: false,
   css: ['~/assets/css/main.css'],
   // nitro: {
   //   // Blokada generowania problematycznego manifestu deweloperskiego
@@ -34,6 +33,12 @@ export default defineNuxtConfig({
   // }
   experimental: {
     appManifest: false
+  },
+  nitro: {
+    prerender: {
+      crawlLinks: false,
+      routes: ['/']
+    }
   },
 
   // nitro: {
