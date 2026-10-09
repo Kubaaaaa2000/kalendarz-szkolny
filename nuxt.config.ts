@@ -14,6 +14,12 @@ export default defineNuxtConfig({
       // ]
     }
   },
+  nitro: {
+    prerender: {
+      routes: [],
+      crawlLinks: false
+    }
+  },
   // pages: true,
   compatibilityDate: '2025-07-15',
   devtools: { 
@@ -33,12 +39,6 @@ export default defineNuxtConfig({
   // }
   experimental: {
     appManifest: false
-  },
-  nitro: {
-    prerender: {
-      crawlLinks: false,
-      routes: ['/']
-    }
   },
 
   // nitro: {
