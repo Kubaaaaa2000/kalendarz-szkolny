@@ -10,10 +10,10 @@ const handleError = () => clearError({ redirect: '/' })
 
 // Czytelniejsza wiadomość w zależności od kodu błędu
 const errorMessage = computed(() => {
-  if (props.error?.statusCode === 404) {
+  if (props.error?.status === 404) {
     return 'Przepraszamy, strona której szukasz nie istnieje lub została przeniesiona.'
   }
-  return props.error?.statusMessage || props.error?.message || 'Wystąpił nieoczekiwany błąd.'
+  return props.error?.status || props.error?.message || 'Wystąpił nieoczekiwany błąd.'
 })
 </script>
 

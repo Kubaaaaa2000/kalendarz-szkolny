@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   
   app: {
+    baseURL: '/kalendarz-szkolny/',
     head: {
       title: 'Kalendarz Szkolny' ,// Opcjonalnie: ustawiasz domyślny tytuł karty
       link: [
