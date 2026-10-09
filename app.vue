@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 const colorMode = useColorMode()
 
 const isDark = computed({
@@ -13,8 +13,11 @@ const isDark = computed({
 
 
 <template>
-    <UHeader title="Nuxt UI"  >
-        <template #rigth>
+    <header class="vw-100"> 
+        <div>
+            <h1 class=" text-primary">Nuxt UI</h1>
+        </div>
+        <div>
             <ClientOnly v-if="!colorMode?.forced">
                 <UButton
                 :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
@@ -27,10 +30,15 @@ const isDark = computed({
                     <div class="size-8" />
                 </template>
             </ClientOnly>
-        </template>
-    </UHeader>
+        </div>
+        
+            
+    </header>
      
      <UApp>
          <NuxtPage />
      </UApp>
+     <footer>
+        <p>Karol Kubica &copy;</p>
+     </footer>
 </template>
