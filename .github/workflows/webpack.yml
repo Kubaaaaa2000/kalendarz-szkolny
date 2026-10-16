@@ -22,11 +22,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+        
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
+
+      - name: Use npm 9 via Corepack
+        run: corepack prepare npm@9.9.4 --activate
 
       - name: Install Dependencies
         run: npm ci
