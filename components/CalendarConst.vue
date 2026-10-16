@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const colorMode = useColorMode()
-const isDark = computed(() => colorMode.value === 'dark')
 // Przykładowa lista wydarzeń szkolnych
 // const events1 = ref([
 //   {
@@ -44,6 +42,9 @@ const isDark = computed(() => colorMode.value === 'dark')
 //   if (color === 'success') return 'success'
 //   return 'primary'
 // }
+
+const colorMode = useColorMode()
+const isDark = computed(() => colorMode.value === 'dark')
 const client = useSupabaseClient()
 const selectedCategory = ref<string | null>(null)
 
@@ -72,6 +73,19 @@ interface AcademicYear {
   end_date: string
   is_active: boolean
 }
+
+const minDate = computed(() => {
+  if (!activeYear.value?.start_date) return undefined
+  const [year, month, day] = activeYear.value.start_date.split('-').map(Number)
+  return new Date(year, month - 1, day)
+})
+
+// Przeliczenie end_date aktywnego roku na obiekt Date dla :max-date
+const maxDate = computed(() => {
+  if (!activeYear.value?.end_date) return undefined
+  const [year, month, day] = activeYear.value.end_date.split('-').map(Number)
+  return new Date(year, month - 1, day)
+})
 
 const mapColor = (colorName: string): string => {
   const map: Record<string, string> = {
@@ -139,7 +153,7 @@ const { data: events, pending } = await useAsyncData('all-academic-events', asyn
   }
 
   // Wyświetlenie całej tablicy wydarzeń w konsoli przeglądarki / serwera
-  console.log('--- WSZYSTKIE EVENTY DLA BIEŻĄCEGO ROKU SZKOLNEGO ---', eventsData)
+//   console.log('--- WSZYSTKIE EVENTY DLA BIEŻĄCEGO ROKU SZKOLNEGO ---', eventsData)
 
   return eventsData as Event[]
 })
@@ -182,6 +196,83 @@ const calendarAttributes = computed(() => {
   })
 })
 </script>
+<template>
+  <div class="p-6 max-w-6xl mx-auto">
+    
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">Kalendarz Roku Szkolnego</h1>
+        <p class="text-neutral-500 dark:text-neutral-400 text-xs sm:text-sm mt-1">
+          Bieżące informacje o dniach wolnych, egzaminach, zebraniach i wydarzeniach.
+        </p>
+      </div>
+      <div v-if="activeYear" class="flex items-center gap-2 self-stretch md:self-auto justify-between md:justify-start">
+        <span class="text-xs sm:text-sm font-medium text-neutral-500 dark:text-neutral-400">Aktywny rok:</span>
+        <UBadge color="primary" variant="solid" size="lg">{{ activeYear.name }}</UBadge>
+      </div>
+    </div>
+
+    <!-- Panel filtrów / Legenda kolorów -->
+    <div class="flex flex-col gap-4 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm">
+      
+      <!-- Przyciski filtrowania -->
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mr-1 w-full sm:w-auto mb-1 sm:mb-0">Filtruj:</span>
+        <UButton
+          size="xs"
+          sm:size="sm"
+          :variant="selectedCategory === null ? 'solid' : 'ghost'"
+          color="neutral"
+          @click="()=>{selectedCategory = null}"
+        >
+          Wszystkie
+        </UButton>
+        <UButton
+          v-for="cat in categories"
+          :key="cat.id"
+          size="xs"
+          sm:size="sm"
+          :variant="selectedCategory === cat.id ? 'solid' : 'ghost'"
+          :color="(mapColor(cat.color) as any)"
+          @click="()=>{selectedCategory = cat.id}"
+        >
+          {{ cat.name }}
+        </UButton>
+      </div>
+
+      <!-- Legenda -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 border-t pt-3 border-neutral-100 dark:border-neutral-800">
+        <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Legenda:</span>
+        <div v-for="cat in categories" :key="cat.id" class="flex items-center gap-1.5">
+          <UBadge :color="(mapColor(cat.color) as any)" variant="subtle" size="xs">
+            {{ cat.name }}
+          </UBadge>
+        </div>
+      </div>
+    </div>
+
+    <!-- Komponent V-Calendar -->
+    <ClientOnly>
+        <VCalendar
+            expanded
+            borderless
+            :attributes="calendarAttributes"
+            :is-dark="isDark"
+            transition="fade"
+            :min-date="minDate"
+            :max-date="maxDate"
+            >
+            </VCalendar>
+        <template #fallback>
+            <div class="h-125 w-full flex items-center justify-center bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800">
+                <UIcon name="i-lucide-loader-2" class="animate-spin w-8 h-8 text-primary" />
+            </div>
+        </template>
+
+    </ClientOnly>   
+    
+  </div>
+</template>
 <style scoped>
 /* Nadpisanie domyślnych stylów V-Calendar, aby pasowały do Dark Mode i Nuxt UI */
 :deep(.vc-container) {
@@ -213,87 +304,22 @@ const calendarAttributes = computed(() => {
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 2px;
 }
-.my-calendar :deep(.vc-weekday-1, .vc-weekday-7) {
-  color: #ac0707;
+:deep(.vc-weekday-1) {
+  color: #ac0707 !important;
+}
+:deep(.vc-weekday-7) {
+  color: #ac0707 !important;
 }
 /* .vc-container .vc-weekday-1, .vc-weekdays .vc-weekday-7 {
   color: #6366f1;
 } */
+ /* Dodanie odstępu pod nagłówkiem kalendarza */
+:deep(.vc-header) {
+  margin-bottom: 2rem !important; /* dostosuj wielkość odstępu wg uznania */
+}
+
+/* Opcjonalnie: odstęp pod dniami tygodnia */
+:deep(.vc-weeks) {
+  margin-top: 0.5rem !important;
+}
 </style>
-<template>
-  <div class="p-6 max-w-6xl mx-auto">
-    
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
-      <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">Kalendarz Roku Szkolnego</h1>
-        <p class="text-neutral-500 dark:text-neutral-400 text-xs sm:text-sm mt-1">
-          Bieżące informacje o dniach wolnych, egzaminach, zebraniach i wydarzeniach.
-        </p>
-      </div>
-      <div v-if="activeYear" class="flex items-center gap-2 self-stretch md:self-auto justify-between md:justify-start">
-        <span class="text-xs sm:text-sm font-medium text-neutral-500 dark:text-neutral-400">Aktywny rok:</span>
-        <UBadge color="primary" variant="solid" size="lg">{{ activeYear.name }}</UBadge>
-      </div>
-    </div>
-
-    <!-- Panel filtrów / Legenda kolorów -->
-    <div class="flex flex-col gap-4 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm">
-      
-      <!-- Przyciski filtrowania -->
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mr-1 w-full sm:w-auto mb-1 sm:mb-0">Filtruj:</span>
-        <UButton
-          size="xs"
-          sm:size="sm"
-          :variant="selectedCategory === null ? 'solid' : 'ghost'"
-          color="neutral"
-          @click="selectedCategory = null"
-        >
-          Wszystkie
-        </UButton>
-        <UButton
-          v-for="cat in categories"
-          :key="cat.id"
-          size="xs"
-          sm:size="sm"
-          :variant="selectedCategory === cat.id ? 'solid' : 'ghost'"
-          :color="(mapColor(cat.color) as any)"
-          @click="selectedCategory = cat.id"
-        >
-          {{ cat.name }}
-        </UButton>
-      </div>
-
-      <!-- Legenda -->
-      <div class="flex flex-wrap items-center gap-2 sm:gap-3 border-t pt-3 border-neutral-100 dark:border-neutral-800">
-        <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Legenda:</span>
-        <div v-for="cat in categories" :key="cat.id" class="flex items-center gap-1.5">
-          <UBadge :color="(mapColor(cat.color) as any)" variant="subtle" size="xs">
-            {{ cat.name }}
-          </UBadge>
-        </div>
-      </div>
-    </div>
-
-    <!-- Komponent V-Calendar -->
-    <!-- 'expanded' rozciąga kalendarz na pełną szerokość kontenera -->
-    <ClientOnly>
-        <VCalendar
-            expanded
-            borderless
-            :attributes="calendarAttributes"
-            :is-dark="isDark"
-            class="my-calendar custom-calendar"
-            title-position="right"
-            />
-        <template #fallback>
-            <div class="h-[500px] w-full flex items-center justify-center bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800">
-                <UIcon name="i-lucide-loader-2" class="animate-spin w-8 h-8 text-primary" />
-            </div>
-        </template>
-
-    </ClientOnly>   
-    
-  </div>
-</template>
-

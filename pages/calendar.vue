@@ -247,41 +247,70 @@ watch(isLoggedIn, (loggedIn) => {
 })
 </script>
 <template>
-  <div v-if="isLoggedIn" class="flex items-center justify-between bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
-      <div class="flex items-center gap-2">
-        <UBadge color="primary" variant="solid">Panel Administratora</UBadge>
-        <span class="text-sm text-neutral-500">Wybierz widok kalendarza:</span>
-      </div>
-
-      <UButtonGroup>
-        <UButton 
-          size="sm" 
-          :variant="activeCalendarView === 'public' ? 'solid' : 'outline'" 
-          color="neutral"
-          icon="i-lucide-calendar"
-          @click="activeCalendarView = 'public'"
-        >
-          Widok główny
-        </UButton>
-        <UButton 
-          size="sm" 
-          :variant="activeCalendarView === 'admin' ? 'solid' : 'outline'" 
-          color="neutral"
-          icon="i-lucide-settings-2"
-          @click="activeCalendarView = 'admin'"
-        >
-          Zarządzanie / Panel zaawansowany
-        </UButton>
-      </UButtonGroup>
+  <!-- <div v-if="isLoggedIn" class="flex items-center justify-between bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+    <div class="flex items-center gap-2">
+      <UBadge color="primary" variant="solid">Panel Administratora</UBadge>
+      <span class="text-sm text-neutral-500">Wybierz widok kalendarza:</span>
     </div>
-    <div>
-        <div>
-      <div v-if="isLoggedIn && activeCalendarView === 'admin'">
-         <SchoolCalendar /> 
-      </div>
-      <div v-else>
-        <CalendarConst />
-      </div>
+    <UButtonGroup>
+      <UButton 
+        size="sm" 
+        :variant="activeCalendarView === 'public' ? 'solid' : 'outline'" 
+        color="neutral"
+        icon="i-lucide-calendar"
+        @click="activeCalendarView = 'public'"
+      >
+        Widok główny
+      </UButton>
+      <UButton 
+        size="sm" 
+        :variant="activeCalendarView === 'admin' ? 'solid' : 'outline'" 
+        color="neutral"
+        icon="i-lucide-settings-2"
+        @click="activeCalendarView = 'admin'"
+      >
+        Zarządzanie / Panel zaawansowany
+      </UButton>
+    </UButtonGroup>
+  </div> -->
+  <div v-if="isLoggedIn" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+    <div class="flex items-center gap-2">
+      <UBadge color="primary" variant="solid">Panel Administratora</UBadge>
+      <!-- Tekst ukryty na telefonach, widoczny od rozmiaru sm w górę -->
+      <span class="hidden sm:inline text-sm text-neutral-500">Wybierz widok kalendarza:</span>
     </div>
-    </div>
+    
+    <UButtonGroup class="w-full sm:w-auto flex">
+      <UButton 
+        size="sm" 
+        :variant="activeCalendarView === 'public' ? 'solid' : 'outline'" 
+        color="neutral"
+        icon="i-lucide-calendar"
+        class="flex-1 sm:flex-initial justify-center"
+        @click="activeCalendarView = 'public'"
+      >
+        Widok główny
+      </UButton>
+      <UButton 
+        size="sm" 
+        :variant="activeCalendarView === 'admin' ? 'solid' : 'outline'" 
+        color="neutral"
+        icon="i-lucide-settings-2"
+        class="flex-1 sm:flex-initial justify-center"
+        @click="activeCalendarView = 'admin'"
+      >
+        Zarządzanie / Panel zaawansowany
+      </UButton>
+    </UButtonGroup>
+  </div>
+  <div>
+      <div>
+        <div v-if="isLoggedIn && activeCalendarView === 'admin'">
+          <SchoolCalendar /> 
+        </div>
+        <div v-else>
+          <CalendarConst />
+        </div>
+      </div>
+  </div>
 </template>

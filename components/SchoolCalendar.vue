@@ -175,6 +175,7 @@ const calendarAttributes = computed(() => {
           expanded
           transparent
           borderless
+          transition="fade"
           :attributes="calendarAttributes"
           class="custom-calendar w-full shadow-sm rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
         >

@@ -1,16 +1,34 @@
 <script setup lang="ts">
-
+const toast = useToast()
 const colorMode = useColorMode()
 const client = useSupabaseClient()
 const user = useSupabaseUser()
 
 const isLoggedIn = computed(() => !!user.value)
 
+const isSlideoverOpen = ref(false)
 
 const handleSignOut = async () => {
+  isSlideoverOpen.value = false
   const { error } = await client.auth.signOut()
   if (!error) {
-    navigateTo('/login') // Przekierowanie po wylogowaniu
+    isSlideoverOpen.value = false // zamknięcie slidovera na telefonie
+    
+    // 2. Wywołanie powiadomienia toast
+    toast.add({
+      title: 'Wylogowano pomyślnie',
+      description: 'Do zobaczenia wkrótce!',
+      icon: 'i-lucide-log-out',
+      color: 'success' // lub 'neutral' / 'primary'
+    })
+  } else {
+    // Opcjonalnie: obsługa błędu wylogowania
+    toast.add({
+      title: 'Błąd wylogowania',
+      description: error.message,
+      icon: 'i-lucide-alert-circle',
+      color: 'error'
+    })
   }
 }
 
@@ -26,14 +44,12 @@ const isDark = computed({
 const profileMenuItems = [
   [
     {
-      label: 'Mój profil',
-      icon: 'i-lucide-user',
-      to: '/profile'
-    },
-    {
       label: 'Ustawienia',
       icon: 'i-lucide-settings',
-      to: '/settings'
+      to: '/settings',
+      onSelect: () => {
+        isSlideoverOpen.value = false
+      }
     }
   ],
   [
@@ -47,6 +63,7 @@ const profileMenuItems = [
     }
   ]
 ]
+
 // const client = useSupabaseClient();
 // const isLoggedIn = false;
 
@@ -74,93 +91,85 @@ const profileMenuItems = [
                 variant="ghost"
                 size="lg"
                 class="p-2 sm:p-2.5"
-                @click="isDark = !isDark"
+                @click="() => { isDark = !isDark }"
                 />
                 <template #fallback>
                     <div class="size-10">
                     </div>  
                 </template>
             </ClientOnly>
-            <USlideover v-if="isLoggedIn" title="Nawigacja">
-                <UButton
-                    icon="i-lucide-menu"
-                    color="neutral"
-                    variant="ghost"
-                    size="lg"
-                    aria-label="Otwórz menu"
-                />
-                <template #body>
-                    <div class="flex flex-col h-full justify-between py-2">
-                    <nav class="space-y-2">
-                        <UButton
-                        to="/calendar"
-                        icon="i-lucide-calendar"
-                        label="Kalendarz"
+            <USlideover title="Nawigacja" v-model:open="isSlideoverOpen">
+              <UButton
+                  icon="i-lucide-menu"
+                  color="neutral"
+                  variant="ghost"
+                  size="lg"
+                  aria-label="Otwórz menu"
+              />
+              <template #body>
+                <div class="flex flex-col h-full justify-between py-2">
+                  <nav class="space-y-2">
+                      <UButton
+                      to="/calendar"
+                      icon="i-lucide-calendar"
+                      label="Kalendarz"
+                      color="neutral"
+                      variant="ghost"
+                      size="lg"
+                      block
+                      class="justify-start text-base py-3"
+                      @click="()=>{isSlideoverOpen = false}"
+                      />
+                      
+                      <UButton
+                      to="/list"
+                      icon="i-lucide-list"
+                      label="Lista"
+                      color="neutral"
+                      variant="ghost"
+                      size="lg"
+                      block
+                      class="justify-start text-base py-3"
+                      @click="()=>{isSlideoverOpen = false}"
+                      />
+                  </nav>
+                  <!-- Dolna część: Zalogowany profil użytkownika -->
+                  <div class="pt-4 border-t border-gray-200 dark:border-gray-800">
+                    <UDropdownMenu v-if="isLoggedIn" :items="profileMenuItems">
+                      <UButton
                         color="neutral"
                         variant="ghost"
-                        size="lg"
-                        block
-                        class="justify-start text-base py-3"
-                        />
-                        
-                        <UButton
-                        to="/dashboard"
-                        icon="i-lucide-layout-dashboard"
-                        label="Pulpit"
-                        color="neutral"
-                        variant="ghost"
-                        size="lg"
-                        block
-                        class="justify-start text-base py-3"
-                        />
-
-                        <UButton
-                        to="/tasks"
-                        icon="i-lucide-check-square"
-                        label="Zadania"
-                        color="neutral"
-                        variant="ghost"
                         block
                         size="lg"
-                        class="justify-start text-base py-3"
-                        />
-                    </nav>
-
-                    <!-- Dolna część: Zalogowany profil użytkownika -->
-                    <div class="pt-4 border-t border-gray-200 dark:border-gray-800">
-                        <UDropdownMenu :items="profileMenuItems">
-                        <UButton
-                            color="neutral"
-                            variant="ghost"
-                            block
-                            size="lg"
-                            class="justify-start w-full p-3"
+                        class="justify-start w-full p-3"
                         >
-                            <UIcon name="i-lucide-user" class="w-6 h-6 text-primary shrink-0" />
-                            <div class="text-left min-w-0 flex-1">
-                            <p class="text-base font-medium truncate">{{"Administrator"}}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{user?.email}}</p>
-                            </div>
-                            <UIcon name="i-lucide-chevrons-up-down" class="w-5 h-5 text-gray-400 ms-auto shrink-0" />
-                        </UButton>
-                        </UDropdownMenu>
-                    </div>
-                    </div>
-                </template>
+                        <UIcon name="i-lucide-user" class="w-6 h-6 text-primary shrink-0" />
+                        <div class="text-left min-w-0 flex-1">
+                        <p class="text-base font-medium truncate">{{"Administrator"}}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{user?.email}}</p>
+                        </div>
+                        <UIcon name="i-lucide-chevrons-up-down" class="w-5 h-5 text-gray-400 ms-auto shrink-0" />
+                      </UButton>
+                    </UDropdownMenu>
+                    <UButton
+                      v-else
+                      to="/login"
+                      label="Zaloguj się"
+                      variant="solid"
+                      size="md"
+                      icon="i-lucide-log-in"
+                      @click="()=>{isSlideoverOpen = false}"
+                    />
+                  </div>
+                </div>
+              </template>
             </USlideover>
-            <UButton
-                v-else
-                to="/login"
-                label="Zaloguj się"
-                variant="solid"
-                size="md"
-                icon="i-lucide-log-in"
-            />
+            
         </div>
         
     </header>
     <main class="w-full min-h-[calc(100vh-8rem)] px-4 sm:px-8 py-6">
-        <UApp>
+        <UApp :toaster="{position:'bottom-left',duration: 3000}">
             <NuxtPage />
         </UApp>
     </main>
