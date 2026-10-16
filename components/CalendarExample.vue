@@ -26,13 +26,11 @@ const events = ref([
   }
 ])
 
-// Mapowanie naszych wydarzeń na format zrozumiały dla V-Calendar (Atrybuty)
 const calendarAttributes = computed(() => {
   return events.value.map(event => ({
     highlight: event.color,
     key: event.id,
     dates: event.date,
-    // Przekazujemy własne metadane, które odczytamy w slocie szablonu
     customData: event ,
     popover: {
       label: event.title,

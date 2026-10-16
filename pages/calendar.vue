@@ -1,8 +1,3 @@
-<script setup lang="ts">
-import CalendarExample from '~/components/CalendarExample.vue';
-import SchoolCalendar from '~/components/SchoolCalendar.vue';
-
-</script>
 
 <!-- <script setup lang="ts">
 const client = useSupabaseClient()
@@ -121,24 +116,24 @@ const calendarAttributes = computed(() => {
       
       <!-- Przycisk resetujący filtr (Wszystkie) -->
       <!-- <UButton -->
-        size="sm"
+        <!-- size="sm"
         :variant="selectedCategory === null ? 'solid' : 'ghost'"
         color="neutral"
         @click="selectedCategory = null"
       >
-        Wszystkie
+        Wszystkie -->
       <!-- </UButton> -->
 
       <!-- Przyciski poszczególnych kategorii -->
       <!-- <UButton -->
-        v-for="cat in categories"
+        <!-- v-for="cat in categories"
         :key="cat.id"
         size="sm"
         :variant="selectedCategory === cat.id ? 'solid' : 'ghost'"
         :color="(cat.color as any) || 'primary'"
         @click="selectedCategory = cat.id"
       >
-        {{ cat.name }}
+        {{ cat.name }} -->
       <!-- </UButton> -->
     <!-- </div> -->
 
@@ -149,13 +144,13 @@ const calendarAttributes = computed(() => {
 
     <!-- Komponent V-Calendar -->
     <!-- <VCalendar -->
-      v-else
+      <!-- v-else
       expanded
       transparent
       borderless
       :attributes="calendarAttributes"
-      class="custom-calendar w-full"
-    >
+      class="custom-calendar w-full" -->
+    <!-- > -->
       <!-- Nagłówek z miesiącem -->
       <!-- <template #header="{ title, movePrevious, moveNext }"> -->
         <!-- <div class="flex justify-between items-center px-4 py-4 bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 rounded-t-xl"> -->
@@ -238,9 +233,12 @@ const calendarAttributes = computed(() => {
   border-radius: 4px;
 }
 </style> -->
+<script setup lang="ts">
+
+</script>
 <template>
     <div>
         <!-- <SchoolCalendar /> -->
-         <CalendarExample/>
+        <CalendarConst/>
     </div>
 </template>
