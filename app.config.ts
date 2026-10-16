@@ -2,7 +2,8 @@ export default defineAppConfig({
   ui: {
     colors: {
       primary: 'rose',
-      neutral: 'taupe'
+      neutral: 'taupe',
+      tertiary: 'indigo'
     },
     card: {
       defaultVariants: {

@@ -1,5 +1,18 @@
 <script setup lang="ts">
+
 const colorMode = useColorMode()
+const client = useSupabaseClient()
+const user = useSupabaseUser()
+
+const isLoggedIn = computed(() => !!user.value)
+
+
+const handleSignOut = async () => {
+  const { error } = await client.auth.signOut()
+  if (!error) {
+    navigateTo('/login') // Przekierowanie po wylogowaniu
+  }
+}
 
 const isDark = computed({
   get() {
@@ -9,6 +22,7 @@ const isDark = computed({
     colorMode.preference = _isDark ? 'dark' : 'light'
   }
 })
+
 const profileMenuItems = [
   [
     {
@@ -27,14 +41,18 @@ const profileMenuItems = [
       label: 'Wyloguj się',
       icon: 'i-lucide-log-out',
       color: 'error' as const,
-      click: () => {
-        // obsługa wylogowania
-        console.log('Wylogowano')
-      }
+      click: handleSignOut
     }
   ]
 ]
-const isLoggedIn = true;
+// const client = useSupabaseClient();
+// const isLoggedIn = false;
+
+// const { data: activeYear } = await client
+//   .from('academic_years')
+//   .select('*')
+//   .eq('is_active', true)
+//   .single()
 </script>
 
 
@@ -71,7 +89,6 @@ const isLoggedIn = true;
                 />
                 <template #body>
                     <div class="flex flex-col h-full justify-between py-2">
-                    <!-- Górna część: Linki nawigacyjne -->
                     <nav class="space-y-2">
                         <UButton
                         to="/calendar"
@@ -95,7 +112,6 @@ const isLoggedIn = true;
                         class="justify-start text-base py-3"
                         />
 
-                        <!-- Miejsce na kolejne linki -->
                         <UButton
                         to="/tasks"
                         icon="i-lucide-check-square"
@@ -120,8 +136,8 @@ const isLoggedIn = true;
                         >
                             <UIcon name="i-lucide-user" class="w-6 h-6 text-primary shrink-0" />
                             <div class="text-left min-w-0 flex-1">
-                            <p class="text-base font-medium truncate">Jan Kowalski</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">jan@example.com</p>
+                            <p class="text-base font-medium truncate">{{"Administrator"}}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{user?.email}}</p>
                             </div>
                             <UIcon name="i-lucide-chevrons-up-down" class="w-5 h-5 text-gray-400 ms-auto shrink-0" />
                         </UButton>

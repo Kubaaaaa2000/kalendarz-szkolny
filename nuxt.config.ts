@@ -27,8 +27,18 @@ export default defineNuxtConfig({
     vscode: {},
     timeline: { enabled: true }
   },
-  modules: ['@nuxt/ui'], 
+  modules: ['@nuxt/ui','@nuxtjs/supabase'], 
   css: ['~/assets/css/main.css'],
+  supabase: {
+    url:"https://opprhstcmnevrxdgzphs.supabase.co/",
+    key:"sb_publishable_P2sewOWZk8Y1J9DGpipLhA_4odLNtcO",
+    redirect: false
+  },
+   ui: {
+    theme: {
+      colors: ['primary', 'secondary', 'success', 'info', 'warning', 'error','tertiary']
+    }
+  },
   // nitro: {
   //   // Blokada generowania problematycznego manifestu deweloperskiego
   //   appManifest: false
