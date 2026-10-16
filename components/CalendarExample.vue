@@ -8,28 +8,28 @@ const events = ref([
     title: 'Apel szkolny',
     description: 'Rozpoczęcie roku lub inne święto',
     date: new Date(2026, 9, 15), // Pamiętaj: miesiące w JS są indeksowane od 0 (9 = Październik)
-    color: 'primary' // Klasa koloru dopasowana do Nuxt UI
+    color: 'blue' // Klasa koloru dopasowana do Nuxt UI
   },
   {
     id: 2,
     title: 'Kartkówka z Matematyki',
     description: 'Funkcje kwadratowe',
     date: new Date(2026, 9, 15),
-    color: 'error'
+    color: 'red'
   },
   {
     id: 3,
     title: 'Wycieczka do zoo',
     description: 'Klasy 1-3',
     date: new Date(2026, 9, 23),
-    color: 'success'
+    color: 'green'
   }
 ])
 
 // Mapowanie naszych wydarzeń na format zrozumiały dla V-Calendar (Atrybuty)
 const calendarAttributes = computed(() => {
   return events.value.map(event => ({
-    highlight: true,
+    highlight: event.color,
     key: event.id,
     dates: event.date,
     // Przekazujemy własne metadane, które odczytamy w slocie szablonu
@@ -112,7 +112,7 @@ const calendarAttributes = computed(() => {
                 <UIcon name="i-lucide-loader-2" class="animate-spin w-8 h-8 text-primary" />
             </div>
         </template>
-        
+
     </ClientOnly>   
     
   </div>
