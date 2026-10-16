@@ -234,11 +234,54 @@ const calendarAttributes = computed(() => {
 }
 </style> -->
 <script setup lang="ts">
+const user = useSupabaseUser()
 
+const isLoggedIn = computed(() => !!user.value)
+
+const activeCalendarView = ref<'public' | 'admin'>('public')
+
+watch(isLoggedIn, (loggedIn) => {
+  if (!loggedIn) {
+    activeCalendarView.value = 'public'
+  }
+})
 </script>
 <template>
+  <div v-if="isLoggedIn" class="flex items-center justify-between bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+      <div class="flex items-center gap-2">
+        <UBadge color="primary" variant="solid">Panel Administratora</UBadge>
+        <span class="text-sm text-neutral-500">Wybierz widok kalendarza:</span>
+      </div>
+
+      <UButtonGroup>
+        <UButton 
+          size="sm" 
+          :variant="activeCalendarView === 'public' ? 'solid' : 'outline'" 
+          color="neutral"
+          icon="i-lucide-calendar"
+          @click="activeCalendarView = 'public'"
+        >
+          Widok główny
+        </UButton>
+        <UButton 
+          size="sm" 
+          :variant="activeCalendarView === 'admin' ? 'solid' : 'outline'" 
+          color="neutral"
+          icon="i-lucide-settings-2"
+          @click="activeCalendarView = 'admin'"
+        >
+          Zarządzanie / Panel zaawansowany
+        </UButton>
+      </UButtonGroup>
+    </div>
     <div>
-        <!-- <SchoolCalendar /> -->
-        <CalendarConst/>
+        <div>
+      <div v-if="isLoggedIn && activeCalendarView === 'admin'">
+         <SchoolCalendar /> 
+      </div>
+      <div v-else>
+        <CalendarConst />
+      </div>
+    </div>
     </div>
 </template>

@@ -41,7 +41,9 @@ const profileMenuItems = [
       label: 'Wyloguj się',
       icon: 'i-lucide-log-out',
       color: 'error' as const,
-      click: handleSignOut
+      onSelect: () => {
+        handleSignOut()
+      }
     }
   ]
 ]
