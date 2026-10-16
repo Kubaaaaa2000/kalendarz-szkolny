@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CalendarExample from '~/components/CalendarExample.vue';
 import SchoolCalendar from '~/components/SchoolCalendar.vue';
 
 </script>
@@ -239,6 +240,7 @@ const calendarAttributes = computed(() => {
 </style> -->
 <template>
     <div>
-        <SchoolCalendar />
+        <!-- <SchoolCalendar /> -->
+         <CalendarExample/>
     </div>
 </template>
