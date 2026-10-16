@@ -65,6 +65,45 @@ interface Event {
   event_categories: Category
 }
 
+interface AcademicYear {
+  id: string
+  name: string
+  start_date: string
+  end_date: string
+  is_active: boolean
+}
+
+const mapColor = (colorName: string): string => {
+  const map: Record<string, string> = {
+    red: 'error',
+    yellow: 'warning',
+    blue: 'info',
+    indigo: 'tertiary',
+    green: 'success',
+    gray: 'neutral'
+  }
+  return map[colorName] || 'primary'
+}
+
+const { data: activeYear, pending: yearPending } = await useAsyncData('active-academic-year', async () => {
+  const { data, error } = await client
+    .from('academic_years')
+    .select('*')
+    .eq('is_active', true)
+    .single()
+    
+  if (error) throw error
+  return data as AcademicYear
+})
+
+const { data: categories } = await useAsyncData('event-categories', async () => {
+  const { data, error } = await client
+    .from('event_categories')
+    .select('*')
+  if (error) throw error
+  return data as Category[]
+})
+
 // Pobranie aktywnego roku szkolnego i wszystkich jego wydarzeń za jednym razem
 const { data: events, pending } = await useAsyncData('all-academic-events', async () => {
   // 1. Pobieramy aktywny rok szkolny
@@ -183,13 +222,57 @@ const calendarAttributes = computed(() => {
 </style>
 <template>
   <div class="p-6 max-w-6xl mx-auto">
-    <!-- Nagłówek aplikacji -->
-    <div class="flex justify-between items-center mb-6">
+    
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
       <div>
-        <h1 class="text-3xl font-bold text-neutral-900 dark:text-white">Kalendarz Szkolny</h1>
-        <p class="text-neutral-500 text-sm">Przegląd wydarzeń</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">Kalendarz Roku Szkolnego</h1>
+        <p class="text-neutral-500 dark:text-neutral-400 text-xs sm:text-sm mt-1">
+          Bieżące informacje o dniach wolnych, egzaminach, zebraniach i wydarzeniach.
+        </p>
       </div>
-      <UButton icon="i-lucide-plus" label="Dodaj wydarzenie" color="primary" />
+      <div v-if="activeYear" class="flex items-center gap-2 self-stretch md:self-auto justify-between md:justify-start">
+        <span class="text-xs sm:text-sm font-medium text-neutral-500 dark:text-neutral-400">Aktywny rok:</span>
+        <UBadge color="primary" variant="solid" size="lg">{{ activeYear.name }}</UBadge>
+      </div>
+    </div>
+
+    <!-- Panel filtrów / Legenda kolorów -->
+    <div class="flex flex-col gap-4 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm">
+      
+      <!-- Przyciski filtrowania -->
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mr-1 w-full sm:w-auto mb-1 sm:mb-0">Filtruj:</span>
+        <UButton
+          size="xs"
+          sm:size="sm"
+          :variant="selectedCategory === null ? 'solid' : 'ghost'"
+          color="neutral"
+          @click="selectedCategory = null"
+        >
+          Wszystkie
+        </UButton>
+        <UButton
+          v-for="cat in categories"
+          :key="cat.id"
+          size="xs"
+          sm:size="sm"
+          :variant="selectedCategory === cat.id ? 'solid' : 'ghost'"
+          :color="(mapColor(cat.color) as any)"
+          @click="selectedCategory = cat.id"
+        >
+          {{ cat.name }}
+        </UButton>
+      </div>
+
+      <!-- Legenda -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 border-t pt-3 border-neutral-100 dark:border-neutral-800">
+        <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Legenda:</span>
+        <div v-for="cat in categories" :key="cat.id" class="flex items-center gap-1.5">
+          <UBadge :color="(mapColor(cat.color) as any)" variant="subtle" size="xs">
+            {{ cat.name }}
+          </UBadge>
+        </div>
+      </div>
     </div>
 
     <!-- Komponent V-Calendar -->
