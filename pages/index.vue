@@ -1,4 +1,4 @@
-<script lang="ts">
+<script setup lang="ts">
 // navigateTo('/calendar', { replace: true })
 definePageMeta({
   middleware: 'auth' // Odwołuje się do middleware/auth.ts
