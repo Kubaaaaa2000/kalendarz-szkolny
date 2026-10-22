@@ -287,7 +287,7 @@ watch(isLoggedIn, (loggedIn) => {
         color="neutral"
         icon="i-lucide-calendar"
         class="flex-1 sm:flex-initial justify-center"
-        @click="activeCalendarView = 'public'"
+        @click="()=>{activeCalendarView = 'public'}"
       >
         Widok główny
       </UButton>
@@ -297,7 +297,7 @@ watch(isLoggedIn, (loggedIn) => {
         color="neutral"
         icon="i-lucide-settings-2"
         class="flex-1 sm:flex-initial justify-center"
-        @click="activeCalendarView = 'admin'"
+        @click="()=>{activeCalendarView = 'admin'}"
       >
         Zarządzanie / Panel zaawansowany
       </UButton>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 const client = useSupabaseClient()
 const toast = useToast()
 

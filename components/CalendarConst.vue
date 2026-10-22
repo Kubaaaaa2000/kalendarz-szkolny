@@ -42,37 +42,58 @@
 //   if (color === 'success') return 'success'
 //   return 'primary'
 // }
+import type { Database } from '~/types/database.types'
 
-const colorMode = useColorMode()
-const isDark = computed(() => colorMode.value === 'dark')
-const client = useSupabaseClient()
-const selectedCategory = ref<string | null>(null)
+type AcademicYear = Database['public']['Tables']['academic_years']['Row']
+type Category = Database['public']['Tables']['event_categories']['Row']
+type EventRow = Database['public']['Tables']['events']['Row']
 
-interface Category {
-  id: string
-  name: string
-  color: string
-  description?: string
-}
-
-interface Event {
-  id: string
-  title: string
-  description: string | null
-  start_date: string
-  end_date: string | null
-  academic_year_id: string
-  category_id: string
+// Rozszerzamy typ Event o relację z kategoriami, którą pobieramy w zapytaniu .select()
+interface EventWithCategory extends EventRow {
   event_categories: Category
 }
 
-interface AcademicYear {
-  id: string
-  name: string
-  start_date: string
-  end_date: string
-  is_active: boolean
-}
+const colorMode = useColorMode()
+const isDark = computed(() => colorMode.value === 'dark')
+const client = useSupabaseClient<Database>()
+const selectedCategory = ref<string | null>(null)
+
+// interface Category {
+//   id: string
+//   name: string
+//   color: string
+//   description?: string
+// }
+
+// interface Event {
+//   id: string
+//   title: string
+//   description: string | null
+//   start_date: string
+//   end_date: string | null
+//   academic_year_id: string
+//   category_id: string
+//   event_categories: Category
+// }
+
+// interface AcademicYear {
+//   id: string
+//   name: string
+//   start_date: string
+//   end_date: string
+//   is_active: boolean
+// }
+
+const { data: activeYear, pending: yearPending } = await useAsyncData('active-academic-year', async () => {
+  const { data, error } = await client
+    .from('academic_years')
+    .select('*')
+    .eq('is_active', true)
+    .single()
+    
+  if (error) throw error
+  return data as AcademicYear
+})
 
 const minDate = computed(() => {
   if (!activeYear.value?.start_date) return undefined
@@ -99,17 +120,6 @@ const mapColor = (colorName: string): string => {
   return map[colorName] || 'primary'
 }
 
-const { data: activeYear, pending: yearPending } = await useAsyncData('active-academic-year', async () => {
-  const { data, error } = await client
-    .from('academic_years')
-    .select('*')
-    .eq('is_active', true)
-    .single()
-    
-  if (error) throw error
-  return data as AcademicYear
-})
-
 const { data: categories } = await useAsyncData('event-categories', async () => {
   const { data, error } = await client
     .from('event_categories')
@@ -121,17 +131,17 @@ const { data: categories } = await useAsyncData('event-categories', async () => 
 // Pobranie aktywnego roku szkolnego i wszystkich jego wydarzeń za jednym razem
 const { data: events, pending } = await useAsyncData('all-academic-events', async () => {
   // 1. Pobieramy aktywny rok szkolny
-  const { data: activeYear, error: yearError } = await client
-    .from('academic_years')
-    .select('id, name')
-    .eq('is_active', true)
-    .single()
+  // const { data: activeYear, error: yearError } = await client
+  //   .from('academic_years')
+  //   .select('id, name')
+  //   .eq('is_active', true)
+  //   .single()
 
-  if (yearError || !activeYear) {
-    console.error('Nie znaleziono aktywnego roku szkolnego:', yearError)
-    return []
-  }
-
+  // if (yearError || !activeYear) {
+  //   console.error('Nie znaleziono aktywnego roku szkolnego:', yearError)
+  //   return []
+  // }
+  if (!activeYear.value) return []
   // 2. Pobieramy wszystkie wydarzenia powiązane z tym rokiem
   const { data: eventsData, error: eventsError } = await client
     .from('events')
@@ -144,7 +154,7 @@ const { data: events, pending } = await useAsyncData('all-academic-events', asyn
         description
       )
     `)
-    .eq('academic_year_id', activeYear.id)
+    .eq('academic_year_id', activeYear.value.id)
     .order('start_date', { ascending: true })
 
   if (eventsError) {
@@ -155,7 +165,7 @@ const { data: events, pending } = await useAsyncData('all-academic-events', asyn
   // Wyświetlenie całej tablicy wydarzeń w konsoli przeglądarki / serwera
 //   console.log('--- WSZYSTKIE EVENTY DLA BIEŻĄCEGO ROKU SZKOLNEGO ---', eventsData)
 
-  return eventsData as Event[]
+  return eventsData as EventWithCategory[]
 })
 
 const filteredEvents = computed(() => {
@@ -180,7 +190,7 @@ const calendarAttributes = computed(() => {
             key: event.id,
             // V-Calendar przyjmuje obiekt z polem start i end dla wydarzeń wielodniowych
             dates: { start: startDate, end: endDate },
-            popover: { label: event.title},
+            popover: { label: event.title,},
             customData: event 
         }
     }

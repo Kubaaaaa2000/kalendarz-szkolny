@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { Database } from '~/types/database.types'
 const toast = useToast()
 const colorMode = useColorMode()
-const client = useSupabaseClient()
+const client = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 
 const isLoggedIn = computed(() => !!user.value)
