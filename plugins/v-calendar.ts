@@ -9,7 +9,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         firstDayOfWeek: 2, // 1 = Niedziela, 2 = Poniedziałek
         masks: {
           title: 'MMMM YYYY',
-          dayPopover: 'WWW, MMM D, HH:hh',
+          dayPopover: 'WWW, D MMM, HH:mm',
         },
       },
     },

@@ -264,15 +264,15 @@ const calendarAttributes = computed(() => {
     <!-- Komponent V-Calendar -->
     <ClientOnly>
         <VCalendar
-            expanded
-            borderless
-            :attributes="calendarAttributes"
-            :is-dark="isDark"
-            transition="fade"
-            :min-date="minDate"
-            :max-date="maxDate"
-            >
-            </VCalendar>
+          expanded
+          borderless
+          :attributes="calendarAttributes"
+          :is-dark="isDark"
+          transition="fade"
+          :min-date="minDate"
+          :max-date="maxDate"
+          >
+        </VCalendar>
         <template #fallback>
             <div class="h-125 w-full flex items-center justify-center bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800">
                 <UIcon name="i-lucide-loader-2" class="animate-spin w-8 h-8 text-primary" />

@@ -307,9 +307,11 @@ watch(isLoggedIn, (loggedIn) => {
       <div>
         <div v-if="isLoggedIn && activeCalendarView === 'admin'">
           <SchoolCalendar /> 
+           
         </div>
         <div v-else>
-          <CalendarConst />
+          <!-- <CalendarConst /> -->
+          <CalendarPractice/>
         </div>
       </div>
   </div>
