@@ -136,31 +136,45 @@ const profileMenuItems = [
                   </nav>
                   <!-- Dolna część: Zalogowany profil użytkownika -->
                   <div class="pt-4 border-t border-gray-200 dark:border-gray-800">
-                    <UDropdownMenu v-if="isLoggedIn" :items="profileMenuItems">
+                    <ClientOnly>
+                      <UDropdownMenu v-if="isLoggedIn" :items="profileMenuItems">
+                        <UButton
+                          color="neutral"
+                          variant="ghost"
+                          block
+                          size="lg"
+                          class="justify-start w-full p-3"
+                          >
+                          
+                            <UIcon name="i-lucide-user" class="w-6 h-6 text-primary shrink-0" />
+                            <div class="text-left min-w-0 flex-1">
+                            <p class="text-base font-medium truncate">{{"Administrator"}}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{user?.email}}</p>
+                            </div>
+                            <UIcon name="i-lucide-chevrons-up-down" class="w-5 h-5 text-gray-400 ms-auto shrink-0" />
+                          
+                        </UButton>
+                      </UDropdownMenu>
                       <UButton
-                        color="neutral"
-                        variant="ghost"
-                        block
-                        size="lg"
-                        class="justify-start w-full p-3"
-                        >
-                        <UIcon name="i-lucide-user" class="w-6 h-6 text-primary shrink-0" />
-                        <div class="text-left min-w-0 flex-1">
-                        <p class="text-base font-medium truncate">{{"Administrator"}}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{user?.email}}</p>
+                        v-else
+                        to="/login"
+                        label="Zaloguj się"
+                        variant="solid"
+                        size="md"
+                        icon="i-lucide-log-in"
+                        @click="()=>{isSlideoverOpen = false}"
+                      />
+                      <template #fallback>
+                        <div class="flex items-center gap-4">
+                          <USkeleton class="h-12 w-12 rounded-full" />
+                          <div class="grid gap-2">
+                            <USkeleton class="h-4 w-[62.5]" />
+                            <USkeleton class="h-4 w-[50]" />
+                          </div>
                         </div>
-                        <UIcon name="i-lucide-chevrons-up-down" class="w-5 h-5 text-gray-400 ms-auto shrink-0" />
-                      </UButton>
-                    </UDropdownMenu>
-                    <UButton
-                      v-else
-                      to="/login"
-                      label="Zaloguj się"
-                      variant="solid"
-                      size="md"
-                      icon="i-lucide-log-in"
-                      @click="()=>{isSlideoverOpen = false}"
-                    />
+                      </template>
+                    </ClientOnly>
+                    
                   </div>
                 </div>
               </template>
@@ -175,6 +189,6 @@ const profileMenuItems = [
         </UApp>
     </main>
      <footer class="w-full h-16 flex items-center px-4 sm:px-8 border-t border-gray-200 dark:border-gray-800">
-        <p class="text-sm text-gray-500">Karol Kubica &copy;</p>
+        <p class="text-sm text-gray-500">Made by Karol Kubica &copy;</p>
     </footer>
 </template>

@@ -6,23 +6,31 @@ const isLoggedIn = computed(() => !!user.value)
 
 const selectedCategory = ref<string | null>(null)
 
-interface Category {
-  id: string
-  name: string
-  color: string
-  description?: string
-}
+// type AcademicYear = Database['public']['Tables']['academic_years']['Row']
+type Category = Database['public']['Tables']['event_categories']['Row']
+type EventRow = Database['public']['Tables']['events']['Row']
 
-interface Event {
-  id: string
-  title: string
-  description: string | null
-  start_date: string
-  end_date: string | null
-  academic_year_id: string
-  category_id: string
+interface EventWithCategory extends EventRow {
   event_categories: Category
 }
+
+// interface Category {
+//   id: string
+//   name: string
+//   color: string
+//   description?: string
+// }
+
+// interface Event {
+//   id: string
+//   title: string
+//   description: string | null
+//   start_date: string
+//   end_date: string | null
+//   academic_year_id: string
+//   category_id: string
+//   event_categories: Category
+// }
 
 // 1. Pobieranie aktywnego roku szkolnego oraz wydarzeń (dokładnie tak jak w kalendarzu)
 const { data: events, pending } = await useAsyncData('list-academic-events', async () => {
@@ -56,19 +64,16 @@ const { data: events, pending } = await useAsyncData('list-academic-events', asy
     return []
   }
 
-  return eventsData as Event[]
+  return eventsData as EventWithCategory[]
 })
 
 // Wyciągnięcie unikalnych kategorii z pobranych wydarzeń do filtrów (lub można pobrać osobno z tabeli)
-const categories = computed(() => {
-  if (!events.value) return []
-  const map = new Map()
-  events.value.forEach(event => {
-    if (event.event_categories) {
-      map.set(event.event_categories.id, event.event_categories)
-    }
-  })
-  return Array.from(map.values())
+const { data: categories } = await useAsyncData('event-categories', async () => {
+  const { data, error } = await client
+    .from('event_categories')
+    .select('*')
+  if (error) throw error
+  return data as Category[]
 })
 
 // 2. Filtrowanie wydarzeń na podstawie wybranej kategorii
@@ -85,6 +90,7 @@ const mapColor = (colorName?: string) => {
     case 'blue': return 'info'
     case 'green': return 'success'
     case 'yellow': return 'warning'
+    case 'indigo': return 'tertiary'
     default: return 'neutral'
   }
 }
@@ -95,6 +101,128 @@ const formatDate = (dateString: string) => {
   const date = new Date(year, month - 1, day)
   return date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })
 }
+
+const isDeleteModalOpen = ref(false)
+const itemToDelete = ref<EventWithCategory | null>(null)
+const isDeleting = ref(false) // opcjonalnie: stan ładowania podczas usuwania
+
+// Funkcja otwiera modal i zapisuje, co chcemy usunąć
+const confirmDelete = (event: EventWithCategory) => {
+  itemToDelete.value = event
+  isDeleteModalOpen.value = true
+}
+
+// Funkcja wykonująca faktyczne usunięcie (np. z Supabase)
+const handleDelete = async () => {
+  if (!itemToDelete.value) return
+
+  try {
+    isDeleting.value = true
+    const { error } = await client
+      .from('events')
+      .delete()
+      .eq('id', itemToDelete.value.id)
+
+    if (error) throw error
+
+    // Usuwamy lokalnie z tablicy, żeby odświeżyć widok bez przeładowania strony
+    if (events.value) {
+      events.value = events.value.filter(e => e.id !== itemToDelete.value?.id)
+    }
+
+    // Zamknięcie modalu
+    isDeleteModalOpen.value = false
+    itemToDelete.value = null
+  } catch (err) {
+    console.error('Błąd podczas usuwania wydarzenia:', err)
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+// Stan modalu edycji
+const isEditModalOpen = ref(false)
+const isSaving = ref(false)
+
+// Formularz edycji
+const editForm = reactive({
+  id: '',
+  title: '',
+  description: '',
+  start_date: '',
+  end_date: '',
+  start_time: '',
+  end_time: '',
+  category_id: ''
+})
+
+// Otwieranie modalu i kopiowanie danych edytowanego wydarzenia
+const openEditModal = (event: EventWithCategory) => {
+  editForm.id = event.id
+  editForm.title = event.title
+  editForm.description = event.description || ''
+  editForm.start_date = event.start_date
+  editForm.end_date = event.end_date || ''
+  // Skracamy czas do formatu "HH:mm" dla inputu typu time, jeśli istnieje
+  editForm.start_time = event.start_time ? event.start_time.substring(0, 5) : ''
+  editForm.end_time = event.end_time ? event.end_time.substring(0, 5) : ''
+  editForm.category_id = event.category_id
+  
+  isEditModalOpen.value = true
+}
+
+// Zapisywanie zmian w bazie Supabase
+const handleUpdate = async () => {
+  if (!editForm.id) return
+
+  try {
+    isSaving.value = true
+
+    // Przygotowanie payloadu (zwróć uwagę na doklejanie ":00" do czasu dla formatu time w bazie)
+    const updatePayload = {
+      title: editForm.title,
+      description: editForm.description || null,
+      start_date: editForm.start_date,
+      end_date: editForm.end_date || null,
+      start_time: editForm.start_time ? `${editForm.start_time}:00` : null,
+      end_time: editForm.end_time ? `${editForm.end_time}:00` : null,
+      category_id: editForm.category_id
+    }
+
+    const { data, error } = await client
+      .from('events')
+      .update(updatePayload)
+      .eq('id', editForm.id)
+      .select(`
+        *,
+        event_categories (
+          id,
+          name,
+          color,
+          description
+        )
+      `)
+      .single()
+
+    if (error) throw error
+
+    // Aktualizacja lokalnej tablicy events, aby kalendarz i lista odświeżyły się natychmiast
+    if (events.value && data) {
+      const index = events.value.findIndex(e => e.id === editForm.id)
+      if (index !== -1) {
+        events.value[index] = data as EventWithCategory
+      }
+    }
+
+    isEditModalOpen.value = false
+  } catch (err) {
+    console.error('Błąd podczas edycji wydarzenia:', err)
+  } finally {
+    isSaving.value = false
+  }
+}
+
+
 </script>
 
 <template>
@@ -119,10 +247,10 @@ const formatDate = (dateString: string) => {
 
     <!-- Pasek filtrów kategorii (taki sam jak w kalendarzu) -->
     <div class="flex flex-wrap items-center gap-2 bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
-      <span class="hidden sm:block text-xs font-semibold text-neutral-400 uppercase tracking-wider mr-1">Filtruj:</span>
+      <span class="hidden sm:block text-sm font-semibold text-neutral-400 uppercase tracking-wider mr-1">Filtruj:</span>
       <UButton
-        size="xs"
-        sm:size="sm"
+        size="md"
+        sm:size="lg"
         :variant="selectedCategory === null ? 'solid' : 'ghost'"
         color="neutral"
         @click="()=>{selectedCategory = null}"
@@ -132,11 +260,11 @@ const formatDate = (dateString: string) => {
       <UButton
         v-for="cat in categories"
         :key="cat.id"
-        size="xs"
-        sm:size="sm"
+        size="md"
+        sm:size="lg"
         :variant="selectedCategory === cat.id ? 'solid' : 'ghost'"
         :color="(mapColor(cat.color) as any)"
-        @click="selectedCategory = cat.id"
+        @click="()=>{selectedCategory = cat.id}"
       >
         {{ cat.name }}
       </UButton>
@@ -166,7 +294,7 @@ const formatDate = (dateString: string) => {
         >
           <div class="space-y-1.5 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <UBadge :color="(mapColor(event.event_categories?.color) as any)" variant="solid" size="xs">
+              <UBadge :color="(mapColor(event.event_categories?.color) as any)" variant="solid" size="md">
                 {{ event.event_categories?.name }}
               </UBadge>
               <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
@@ -192,7 +320,7 @@ const formatDate = (dateString: string) => {
         >
           <div class="space-y-1.5 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <UBadge :color="(mapColor(event.event_categories?.color) as any)" variant="solid" size="xs">
+              <UBadge :color="(mapColor(event.event_categories?.color) as any)" variant="solid" size="md">
                 {{ event.event_categories?.name }}
               </UBadge>
               <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
@@ -210,14 +338,130 @@ const formatDate = (dateString: string) => {
 
           <!-- Akcje dostępne tylko dla administratora -->
           <div class="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-neutral-100 dark:border-neutral-800">
-            <UButton size="xs" variant="outline" color="neutral" icon="i-lucide-pencil">
-              Edytuj
-            </UButton>
-            <UButton size="xs" variant="ghost" color="error" icon="i-lucide-trash-2">
-              Usuń
-            </UButton>
+            <UButton size="md" sm:size="lg" variant="outline" color="neutral" icon="i-lucide-pencil" @click="openEditModal(event)">Edytuj</UButton>
+            <UButton size="md" sm:size="lg" variant="ghost" color="error" icon="i-lucide-trash-2" @click="confirmDelete(event)">Usuń</UButton>                       
           </div>
         </div>
+        <UModal 
+        v-model:open="isDeleteModalOpen"
+        :dismissible="false"
+        title="Czy jesteś pewien aby usunąć?"
+        :close="{
+          color: 'primary',
+          variant: 'outline',
+          class: 'rounded-full'
+        }"
+        >
+          <template #main>
+            {{itemToDelete?.title}}
+          </template>
+          <template #footer class="flex justify-end gap-3 pt-2">
+            <UButton 
+              color="neutral" 
+              variant="outline" 
+              @click="()=>{isDeleteModalOpen = false}"
+            >
+              Anuluj
+            </UButton>
+            <UButton 
+              color="error" 
+              :loading="isDeleting"
+              @click="handleDelete"
+            >
+              Usuń
+            </UButton>
+          </template>
+        </UModal>
+        <!-- MODAL EDYCJI WYDARZENIA (Nuxt UI v3) -->
+        <UModal v-model:open="isEditModalOpen">
+          <template #content>
+            <div class="p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+              <div class="space-y-1">
+                <h3 class="text-base font-semibold text-neutral-900 dark:text-white">
+                  Edytuj wydarzenie
+                </h3>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Wprowadź zmiany dla wybranego wydarzenia w kalendarzu.
+                </p>
+              </div>
+
+              <!-- Formularz -->
+              <div class="space-y-3">
+                <!-- Tytuł -->
+                <div class="space-y-1">
+                  <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Tytuł</label>
+                  <UInput v-model="editForm.title" placeholder="Nazwa wydarzenia" class="w-full" />
+                </div>
+
+                <!-- Kategoria -->
+                <div class="space-y-1">
+                  <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Kategoria</label>
+                  <select 
+                    v-model="editForm.category_id"
+                    class="w-full px-3 py-1.5 text-sm bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-md  focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option v-for="cat in categories" :key="cat.id" :value="cat.id"  :class="' text-'+(mapColor(cat.color) as (string))">
+                      {{ cat.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Daty (Start i Opcjonalny Koniec) -->
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Data startu</label>
+                    <UInput type="date" v-model="editForm.start_date" class="w-full" />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Data końca (opcjonalnie)</label>
+                    <UInput type="date" v-model="editForm.end_date" class="w-full" />
+                  </div>
+                </div>
+
+                <!-- Godziny (Start i Koniec) -->
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Godzina startu</label>
+                    <UInput type="time" v-model="editForm.start_time" class="w-full" />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Godzina końca</label>
+                    <UInput type="time" v-model="editForm.end_time" class="w-full" />
+                  </div>
+                </div>
+
+                <!-- Opis -->
+                <div class="space-y-1">
+                  <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Opis</label>
+                  <textarea 
+                    v-model="editForm.description"
+                    rows="3"
+                    placeholder="Dodatkowe informacje..."
+                    class="w-full px-3 py-2 text-sm bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-md text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                  ></textarea>
+                </div>
+              </div>
+
+              <!-- Przyciski akcji -->
+              <div class="flex justify-end gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                <UButton 
+                  color="neutral" 
+                  variant="outline" 
+                  @click="()=>{isEditModalOpen = false}"
+                >
+                  Anuluj
+                </UButton>
+                <UButton 
+                  color="primary" 
+                  :loading="isSaving"
+                  @click="handleUpdate"
+                >
+                  Zapisz zmiany
+                </UButton>
+              </div>
+            </div>
+          </template>
+        </UModal>
       </template>
 
     </div>

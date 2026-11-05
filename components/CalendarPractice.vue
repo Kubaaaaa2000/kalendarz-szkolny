@@ -14,6 +14,10 @@ const colorMode = useColorMode()
 const isDark = computed(() => colorMode.value === 'dark')
 const client = useSupabaseClient<Database>()
 const selectedCategory = ref<string | null>(null)
+const initialPage = {
+  month: new Date().getMonth() + 1,
+  year: new Date().getFullYear()
+}
 
 
 const { data: activeYear, pending: yearPending } = await useAsyncData('active-academic-year', async () => {
@@ -178,6 +182,7 @@ const calendarAttributes = computed(() => {
         <VCalendar
           expanded
           borderless
+          :initial-page="initialPage"
           :attributes="calendarAttributes"
           :is-dark="isDark"
           transition="fade"
