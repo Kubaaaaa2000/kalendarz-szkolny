@@ -4,6 +4,8 @@ const client = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 const isLoggedIn = computed(() => !!user.value)
 
+const toast = useToast()
+
 const selectedCategory = ref<string | null>(null)
 
 // type AcademicYear = Database['public']['Tables']['academic_years']['Row']
@@ -174,7 +176,18 @@ const openEditModal = (event: EventWithCategory) => {
 // Zapisywanie zmian w bazie Supabase
 const handleUpdate = async () => {
   if (!editForm.id) return
-
+  // Blokujemy wysyłkę, jeśli brakuje któregokolwiek z pól wymaganych przez bazę
+  if (!editForm.title || !editForm.start_date || !editForm.category_id) {
+    console.warn('Uzupełnij wymagane pola: Tytuł, Data startu oraz Kategoria!')
+    // Tutaj możesz też pokazać np. komunikat toast w UI
+    toast.add({
+      title: 'Błąd Zapisy Zmiany',
+      description:'Uzupełnij wymagane pola: Tytuł, Data startu oraz Kategoria!' ,
+      icon: 'i-lucide-alert-circle',
+      color: 'error'
+    })
+    return
+  }
   try {
     isSaving.value = true
 
@@ -305,7 +318,7 @@ const handleUpdate = async () => {
             </div>
             <h3 class="text-base font-bold text-neutral-900 dark:text-white">{{ event.title }}</h3>
             <p class="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-              {{ event.description || 'Brak dodatkowego opisu wydarzenia.' }}
+              {{ event.description || 'Brak dodatkowego opisu wydarzenia.' }} {{ event.start_time ? ' od '+event.start_time.substring(0, 5) : ''}} {{ event.end_time ? ' do '+event.end_time.substring(0, 5) : ''}}
             </p>
           </div>
         </div>
@@ -332,7 +345,7 @@ const handleUpdate = async () => {
             </div>
             <h3 class="text-base font-bold text-neutral-900 dark:text-white">{{ event.title }}</h3>
             <p class="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-              {{ event.description || 'Brak dodatkowego opisu wydarzenia.' }}
+              {{ event.description || 'Brak dodatkowego opisu wydarzenia.' }}<span class=" text-black dark:text-white">{{ event.start_time ? ' od '+event.start_time.substring(0, 5) : ''}} {{ event.end_time ? ' do '+event.end_time.substring(0, 5) : ''}}</span>
             </p>
           </div>
 
@@ -389,15 +402,18 @@ const handleUpdate = async () => {
               <div class="space-y-3">
                 <!-- Tytuł -->
                 <div class="space-y-1">
-                  <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Tytuł</label>
-                  <UInput v-model="editForm.title" placeholder="Nazwa wydarzenia" class="w-full" />
+                  <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                    Tytuł
+                    <span class="text-error-500 font-bold">*</span>
+                  </label>
+                  <UInput v-model="editForm.title" placeholder="Nazwa wydarzenia" class="w-full" required />
                 </div>
 
                 <!-- Kategoria -->
                 <div class="space-y-1">
-                  <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Kategoria</label>
+                  <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Kategoria <span class="text-error-500 font-bold">*</span></label>
                   <select 
-                    v-model="editForm.category_id"
+                    v-model="editForm.category_id" required
                     class="w-full px-3 py-1.5 text-sm bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-md  focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option v-for="cat in categories" :key="cat.id" :value="cat.id"  :class="' text-'+(mapColor(cat.color) as (string))">
@@ -409,11 +425,16 @@ const handleUpdate = async () => {
                 <!-- Daty (Start i Opcjonalny Koniec) -->
                 <div class="grid grid-cols-2 gap-3">
                   <div class="space-y-1">
-                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Data startu</label>
-                    <UInput type="date" v-model="editForm.start_date" class="w-full" />
+                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                      Data startu
+                      <span class="text-error-500 font-bold">*</span>
+                    </label>
+                    <UInput type="date" v-model="editForm.start_date" class="w-full" required />
                   </div>
                   <div class="space-y-1">
-                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Data końca (opcjonalnie)</label>
+                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Data końca 
+                      <span class="text-[10px] text-neutral-400 dark:text-neutral-500 font-normal">opcjonalnie</span>
+                    </label>
                     <UInput type="date" v-model="editForm.end_date" class="w-full" />
                   </div>
                 </div>
@@ -421,18 +442,27 @@ const handleUpdate = async () => {
                 <!-- Godziny (Start i Koniec) -->
                 <div class="grid grid-cols-2 gap-3">
                   <div class="space-y-1">
-                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Godzina startu</label>
+                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                      Godzina startu 
+                      <span class="text-[10px] text-neutral-400 dark:text-neutral-500 font-normal">opcjonalnie</span>
+                    </label>
                     <UInput type="time" v-model="editForm.start_time" class="w-full" />
                   </div>
                   <div class="space-y-1">
-                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Godzina końca</label>
+                    <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                      Godzina końca
+                      <span class="text-[10px] text-neutral-400 dark:text-neutral-500 font-normal">opcjonalnie</span>
+                    </label>
                     <UInput type="time" v-model="editForm.end_time" class="w-full" />
                   </div>
                 </div>
 
                 <!-- Opis -->
                 <div class="space-y-1">
-                  <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Opis</label>
+                  <label class="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                    Opis 
+                    <span class="text-[10px] text-neutral-400 dark:text-neutral-500 font-normal">opcjonalnie</span>
+                  </label>
                   <textarea 
                     v-model="editForm.description"
                     rows="3"
