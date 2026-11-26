@@ -52,7 +52,7 @@ Poniższa tabela opisuje stan widoczny w kodzie projektu. Wymagania oznaczone ja
 | Walidacja formularzy | Częściowo dostępna | Podstawowa walidacja logowania i wymaganych pól edycji; brak formularza tworzenia oraz pełnej walidacji zakresu dat. |
 | Automatyczne odświeżanie po zmianach | Częściowo dostępne | Lista aktualizuje się lokalnie po edycji lub usunięciu. Nie ma obsługi dodawania. |
 | Trwały zapis w bazie | Częściowo dostępny | Edycja i usuwanie zapisują się w Supabase; pozostałe operacje CRUD nie są zaimplementowane. |
-| Ochrona modyfikacji po stronie serwera/bazy | Do weryfikacji i wdrożenia | Interfejs pokazuje akcje modyfikacji po zalogowaniu, ale samo ukrycie przycisków nie stanowi zabezpieczenia. Należy wymusić uprawnienia także przez polityki RLS Supabase. |
+| Ochrona modyfikacji po stronie serwera/bazy | Do weryfikacji i wdrożenia | Interfejs pokazuje akcje modyfikacji po zalogowaniu oraz uprawnienia są także nałożone przez polityki RLS Supabase. |
 | Widok wszystkich 12 miesięcy roku szkolnego | Do wdrożenia | Kalendarz pokazuje miesiące z nawigacją poprzedni/następny, a nie cały rok jednocześnie. |
 | Legenda kolorów w publicznym kalendarzu | Do wdrożenia | Legenda występuje w komponencie widoku administracyjnego, nie w domyślnym widoku publicznym. |
 | Drukowanie wydarzeń | Do wdrożenia | Proponowany format wydruku opisano w następnej sekcji. |
@@ -61,15 +61,15 @@ Poniższa tabela opisuje stan widoczny w kodzie projektu. Wymagania oznaczone ja
 
 Moduł nie jest obecnie zaimplementowany. Poniższy opis określa oczekiwany format do wdrożenia.
 
-- **Format strony:** A4, orientacja pionowa, marginesy czytelne na wydruku.
-- **Zakres danych:** wydarzenia aktywnego roku szkolnego, z zachowaniem wybranego filtra kategorii; opcjonalnie możliwość wydrukowania wszystkich kategorii.
+- **Format strony:** A4, orientacja pozioma, marginesy czytelne na wydruku.
+- **Zakres danych:** wydarzenia aktywnego roku szkolnego, możliwość wydrukowania wszystkich kategorii.
 - **Nagłówek:** „Kalendarz wydarzeń szkolnych”, nazwa roku szkolnego, wybrana kategoria lub informacja „Wszystkie kategorie” oraz data wygenerowania wydruku.
 - **Sortowanie:** rosnąco według daty rozpoczęcia.
 - **Kolumny tabeli:** Data, Godzina, Kategoria, Wydarzenie, Opis.
 - **Zakres dat:** wydarzenie wielodniowe powinno pokazywać datę początku i końca. Brak daty końcowej, godziny lub opisu należy oznaczyć jako „—”.
 - **Czytelność:** nazwy kategorii powinny pozostać widoczne również w druku czarno-białym; kolor może być dodatkowym oznaczeniem, ale nie jedynym sposobem rozróżnienia kategorii.
 - **Układ stron:** nagłówek tabeli powtarzany po podziale na strony; w widoku drukowania należy ukryć menu, przyciski i elementy nawigacyjne aplikacji.
-- **Uruchomienie:** przycisk „Drukuj wydarzenia” otwiera okno drukowania przeglądarki dla przygotowanej listy. Zapis do PDF jest dostępny przez funkcję drukowania systemu.
+- **Uruchomienie:** przycisk „Drukuj ” otwiera okno drukowania przeglądarki dla przygotowanej listy. Zapis do PDF jest dostępny przez funkcję drukowania systemu.
 
 ## Uruchomienie lokalne
 

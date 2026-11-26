@@ -77,7 +77,7 @@ const profileMenuItems = [
 
 
 <template>
-    <header class="w-full min-h-16 sm:h-20 flex justify-between items-center px-4 sm:px-8 border-b border-gray-200 dark:border-gray-800 gap-3"> 
+    <header class="w-full min-h-16 sm:h-20 flex justify-between items-center px-4 sm:px-8 border-b border-gray-200 dark:border-gray-800 gap-3 print:hidden"> 
 
         <div class="flex-1 min-w-0">
             <h1 class="text-primary text-lg sm:text-3xl font-bold truncate">Kalendarz roku szkolnego</h1>
@@ -133,6 +133,17 @@ const profileMenuItems = [
                       class="justify-start text-base py-3"
                       @click="()=>{isSlideoverOpen = false}"
                       />
+                      <UButton
+                      to="/print"
+                      icon="i-lucide-printer"
+                      label="Drukuj kalendarz"
+                      color="neutral"
+                      variant="ghost"
+                      size="lg"
+                      block
+                      class="justify-start text-base py-3"
+                      @click="()=>{isSlideoverOpen = false}"
+                      />
                   </nav>
                   <!-- Dolna część: Zalogowany profil użytkownika -->
                   <div class="pt-4 border-t border-gray-200 dark:border-gray-800">
@@ -146,12 +157,12 @@ const profileMenuItems = [
                           class="justify-start w-full p-3"
                           >
                           
-                            <UIcon name="i-lucide-user" class="w-6 h-6 text-primary shrink-0" />
-                            <div class="text-left min-w-0 flex-1">
-                            <p class="text-base font-medium truncate">{{"Administrator"}}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{user?.email}}</p>
-                            </div>
-                            <UIcon name="i-lucide-chevrons-up-down" class="w-5 h-5 text-gray-400 ms-auto shrink-0" />
+                          <UIcon name="i-lucide-user" class="w-6 h-6 text-primary shrink-0" />
+                          <div class="text-left min-w-0 flex-1">
+                          <p class="text-base font-medium truncate">{{"Administrator"}}</p>
+                          <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{user?.email}}</p>
+                          </div>
+                          <UIcon name="i-lucide-chevrons-up-down" class="w-5 h-5 text-gray-400 ms-auto shrink-0" />
                           
                         </UButton>
                       </UDropdownMenu>
@@ -188,7 +199,7 @@ const profileMenuItems = [
             <NuxtPage />
         </UApp>
     </main>
-     <footer class="w-full h-16 flex items-center px-4 sm:px-8 border-t border-gray-200 dark:border-gray-800">
+     <footer class="w-full h-16 flex items-center px-4 sm:px-8 border-t border-gray-200 dark:border-gray-800 print:hidden">
         <p class="text-sm text-gray-500">Made by Karol Kubica &copy;</p>
     </footer>
 </template>
